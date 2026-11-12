@@ -1,0 +1,66 @@
+EXPERIMENT 9: Link State Routing in NS2
+
+AIM
+To simulate a network using Link State routing in NS2 and observe route-based packet delivery.
+
+PROGRAM (Tcl - save as exp9.tcl)
+# Some NS2 distributions/builds may not include the LS routing module.
+# If "Unknown routing protocol LS" appears, use a build with LS support
+# or demonstrate Link State routing using a supported routing extension.
+set ns [new Simulator]
+set tr [open exp9.tr w]
+set nf [open exp9.nam w]
+$ns trace-all $tr
+$ns namtrace-all $nf
+
+# Enable Link State routing (requires LS support in the NS2 build)
+$ns rtproto LS
+
+set n0 [$ns node]
+set n1 [$ns node]
+set n2 [$ns node]
+set n3 [$ns node]
+set n4 [$ns node]
+
+$ns duplex-link $n0 $n1 1Mb 10ms DropTail
+# Two alternative paths from node 1 toward node 3
+$ns duplex-link $n1 $n2 1Mb 10ms DropTail
+$ns duplex-link $n2 $n3 1Mb 10ms DropTail
+$ns duplex-link $n1 $n4 1Mb 20ms DropTail
+$ns duplex-link $n4 $n3 1Mb 20ms DropTail
+
+set udp [new Agent/UDP]
+$ns attach-agent $n0 $udp
+set sink [new Agent/Null]
+$ns attach-agent $n3 $sink
+$ns connect $udp $sink
+set app [new Application/Traffic/CBR]
+$app set packetSize_ 512
+$app set interval_ 0.1
+$app attach-agent $udp
+
+$ns at 1.0 "$app start"
+$ns at 7.0 "$app stop"
+
+proc finish {} {
+    global ns tr nf
+    $ns flush-trace
+    close $tr
+    close $nf
+    exec nam exp9.nam &
+    exit 0
+}
+$ns at 8.0 "finish"
+$ns run
+
+PROCEDURE
+1. Check whether your NS2 installation supports the LS routing module.
+2. Save as exp9.tcl and run: ns exp9.tcl
+3. If the simulator reports "Unknown routing protocol LS", the installed NS2 build does not include the LS module; use an NS2 build with LS support before running this experiment.
+4. Inspect the NAM animation and trace file.
+5. Link State routing builds a network topology view and computes shortest paths from link-state information.
+
+OUTPUT (illustrative; only if the installed NS2 build supports LS)
+Link State routing simulation executed.
+Trace file exp9.tr and animation file exp9.nam were generated.
+Packets were delivered from source node 0 to destination node 3.

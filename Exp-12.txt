@@ -1,0 +1,38 @@
+EXPERIMENT 12: Wireshark Filter Expressions
+
+AIM
+To study and apply Wireshark display-filter expressions to identify specific network packets and protocols.
+
+PROGRAM / FILTER EXPRESSIONS
+Wireshark filters are entered in the Display Filter bar. These are expressions to apply during packet analysis, not a C/Tcl program.
+
+1. ip                         - Show IPv4 packets.
+2. ipv6                       - Show IPv6 packets.
+3. tcp                        - Show TCP packets.
+4. udp                        - Show UDP packets.
+5. icmp                       - Show ICMP packets.
+6. dns                        - Show DNS packets.
+7. http                       - Show HTTP packets.
+8. arp                        - Show ARP packets.
+9. tcp.port == 80             - Show TCP packets using port 80.
+10. udp.port == 53             - Show UDP packets using port 53.
+11. ip.addr == 192.168.1.10   - Packets where this address is source or destination.
+12. ip.src == 192.168.1.10    - Packets from this source address.
+13. ip.dst == 192.168.1.10    - Packets to this destination address.
+14. tcp.flags.syn == 1        - TCP packets with SYN flag set.
+15. tcp.analysis.retransmission - TCP retransmissions.
+16. frame contains "hello"   - Frames containing the specified byte sequence (where supported).
+
+PROCEDURE
+1. Open Wireshark and select the active network interface.
+2. Start packet capture.
+3. Generate traffic by opening a website or using ping.
+4. Stop the capture.
+5. Enter each display filter in the Display Filter bar and press Enter.
+6. Observe the packets that match each expression.
+7. Clear the filter to view all captured packets again.
+
+OUTPUT (illustrative)
+The display filters were applied successfully.
+The packet list showed only packets matching the selected protocol, address, port, or TCP flag.
+For example, the filter "dns" displayed DNS query and response packets when DNS traffic was captured.

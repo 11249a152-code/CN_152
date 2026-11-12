@@ -1,0 +1,84 @@
+EXPERIMENT 6: File Transfer Using TCP Sockets
+
+AIM
+To transfer a file from a TCP client to a server using socket programming in C.
+
+PROGRAM (Server - save as file_server.c)
+#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
+#include <arpa/inet.h>
+
+int main(void) {
+    int s = socket(AF_INET, SOCK_STREAM, 0);
+    struct sockaddr_in a = {0};
+    a.sin_family = AF_INET; a.sin_port = htons(5002);
+    a.sin_addr.s_addr = INADDR_ANY;
+    int opt = 1;
+    setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+    if (bind(s, (struct sockaddr *)&a, sizeof(a)) < 0 || listen(s, 1) < 0) {
+        perror("server setup"); return 1;
+    }
+    puts("File server waiting on port 5002...");
+    int c = accept(s, NULL, NULL);
+    if (c < 0) { perror("accept"); return 1; }
+
+    FILE *fp = fopen("received_file", "wb");
+    if (!fp) { perror("fopen"); close(c); close(s); return 1; }
+    char buf[4096];
+    ssize_t n;
+    while ((n = recv(c, buf, sizeof(buf), 0)) > 0)
+        fwrite(buf, 1, (size_t)n, fp);
+    fclose(fp);
+    puts("File received and saved as received_file.");
+    close(c); close(s);
+    return 0;
+}
+
+PROGRAM (Client - save as file_client.c)
+#include <stdio.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+
+int main(int argc, char *argv[]) {
+    if (argc != 2) {
+        printf("Usage: %s <file-to-send>\n", argv[0]); return 1;
+    }
+    FILE *fp = fopen(argv[1], "rb");
+    if (!fp) { perror("fopen"); return 1; }
+
+    int s = socket(AF_INET, SOCK_STREAM, 0);
+    struct sockaddr_in a = {0};
+    a.sin_family = AF_INET; a.sin_port = htons(5002);
+    inet_pton(AF_INET, "127.0.0.1", &a.sin_addr);
+    if (connect(s, (struct sockaddr *)&a, sizeof(a)) < 0) {
+        perror("connect"); fclose(fp); return 1;
+    }
+
+    char buf[4096];
+    size_t n;
+    while ((n = fread(buf, 1, sizeof(buf), fp)) > 0) {
+        size_t sent = 0;
+        while (sent < n) {
+            ssize_t k = send(s, buf + sent, n - sent, 0);
+            if (k <= 0) { perror("send"); fclose(fp); close(s); return 1; }
+            sent += (size_t)k;
+        }
+    }
+    puts("File sent successfully.");
+    fclose(fp); shutdown(s, SHUT_WR); close(s);
+    return 0;
+}
+
+PROCEDURE
+1. Save as file_server.c and file_client.c.
+2. Compile both using gcc.
+3. Create a sample file, for example: echo "Computer Networks Lab" > sample.txt
+4. Run ./file_server in terminal 1.
+5. Run ./file_client sample.txt in terminal 2.
+6. The server saves the received bytes in received_file.
+
+OUTPUT (illustrative)
+Server: File server waiting on port 5002...
+Server: File received and saved as received_file.
+Client: File sent successfully.

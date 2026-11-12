@@ -1,0 +1,68 @@
+EXPERIMENT 7: ARP/RARP Simulation
+
+AIM
+To simulate the working of Address Resolution Protocol (ARP) and Reverse Address Resolution Protocol (RARP) using a C program.
+
+PROGRAM (C - save as exp7.c)
+#include <stdio.h>
+#include <string.h>
+
+struct entry {
+    char ip[20];
+    char mac[20];
+};
+
+int main(void) {
+    struct entry table[] = {
+        {"192.168.1.1", "AA:BB:CC:DD:EE:01"},
+        {"192.168.1.2", "AA:BB:CC:DD:EE:02"},
+        {"192.168.1.3", "AA:BB:CC:DD:EE:03"}
+    };
+    int count = sizeof(table) / sizeof(table[0]);
+    int choice, found;
+    char value[20];
+
+    printf("1. ARP (IP to MAC)\n2. RARP (MAC to IP)\nEnter choice: ");
+    if (scanf("%d", &choice) != 1) return 1;
+
+    if (choice == 1) {
+        printf("Enter IP address: ");
+        scanf("%19s", value);
+        found = 0;
+        for (int i = 0; i < count; i++) {
+            if (strcmp(value, table[i].ip) == 0) {
+                printf("ARP reply: MAC address = %s\n", table[i].mac);
+                found = 1; break;
+            }
+        }
+        if (!found) puts("IP address not found in ARP table.");
+    } else if (choice == 2) {
+        printf("Enter MAC address: ");
+        scanf("%19s", value);
+        found = 0;
+        for (int i = 0; i < count; i++) {
+            if (strcmp(value, table[i].mac) == 0) {
+                printf("RARP reply: IP address = %s\n", table[i].ip);
+                found = 1; break;
+            }
+        }
+        if (!found) puts("MAC address not found in RARP table.");
+    } else {
+        puts("Invalid choice.");
+    }
+    return 0;
+}
+
+PROCEDURE
+1. Save as exp7.c.
+2. Compile: gcc exp7.c -o exp7
+3. Run: ./exp7
+4. Select ARP to search by IP address or RARP to search by MAC address.
+5. Note: this is a table-based educational simulation, not a real Ethernet ARP/RARP packet exchange.
+
+OUTPUT (illustrative)
+1. ARP (IP to MAC)
+2. RARP (MAC to IP)
+Enter choice: 1
+Enter IP address: 192.168.1.2
+ARP reply: MAC address = AA:BB:CC:DD:EE:02

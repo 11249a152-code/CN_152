@@ -1,0 +1,33 @@
+EXPERIMENT 13: Inspecting Packets with Wireshark
+
+AIM
+To capture and inspect network packets using Wireshark and study protocol headers and packet details.
+
+PROGRAM / PROCEDURE
+This experiment uses Wireshark's graphical interface rather than a source-code program.
+
+1. Open Wireshark.
+2. Select the network interface that is carrying traffic (Wi-Fi or Ethernet).
+3. Click Start Capture.
+4. Generate network traffic, for example by visiting a website or running ping to a reachable host.
+5. Click Stop Capture.
+6. Select a packet in the packet list.
+7. Expand the Packet Details pane and inspect:
+   a. Frame: capture time, frame number and frame length.
+   b. Ethernet: source and destination MAC addresses and EtherType.
+   c. Internet Protocol: source and destination IP addresses, TTL and protocol.
+   d. TCP or UDP: source port, destination port, flags, sequence/acknowledgement numbers (TCP), or length (UDP).
+   e. Application layer: DNS, HTTP, TLS or other decoded protocol fields, when present.
+8. Right-click a packet and choose Follow > TCP Stream (for TCP traffic) to view the conversation, when available.
+9. Use filters such as tcp, udp, dns, icmp and ip.addr == <address> to narrow the packet list.
+
+OBSERVATIONS
+- Packet List: displays captured frames with number, time, source, destination, protocol, length and information.
+- Packet Details: displays protocol fields in a hierarchical format.
+- Packet Bytes: displays the selected packet in hexadecimal and ASCII form.
+
+OUTPUT (illustrative)
+Packets were captured successfully using Wireshark.
+The Ethernet, IP and transport-layer headers were inspected.
+Source/destination addresses, ports, protocol type and packet length were observed.
+Actual packet values depend on the interface and traffic captured.

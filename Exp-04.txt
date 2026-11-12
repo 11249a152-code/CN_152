@@ -1,0 +1,82 @@
+EXPERIMENT 4: Echo Client and Server
+
+AIM
+To implement a TCP echo server and client using socket programming in C.
+
+PROGRAM (Server - save as server.c)
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+
+int main(void) {
+    int s = socket(AF_INET, SOCK_STREAM, 0);
+    if (s < 0) { perror("socket"); return 1; }
+
+    struct sockaddr_in addr = {0};
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(5000);
+    addr.sin_addr.s_addr = INADDR_ANY;
+
+    int opt = 1;
+    setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+    if (bind(s, (struct sockaddr *)&addr, sizeof(addr)) < 0 ||
+        listen(s, 5) < 0) { perror("bind/listen"); close(s); return 1; }
+
+    printf("Echo server listening on port 5000...\n");
+    int c = accept(s, NULL, NULL);
+    if (c < 0) { perror("accept"); close(s); return 1; }
+
+    char buf[1024];
+    ssize_t n;
+    while ((n = recv(c, buf, sizeof(buf), 0)) > 0) {
+        send(c, buf, n, 0);
+        if (memchr(buf, '\n', n)) break;
+    }
+    close(c);
+    close(s);
+    return 0;
+}
+
+PROGRAM (Client - save as client.c)
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+
+int main(void) {
+    int s = socket(AF_INET, SOCK_STREAM, 0);
+    if (s < 0) { perror("socket"); return 1; }
+
+    struct sockaddr_in addr = {0};
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(5000);
+    inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr);
+
+    if (connect(s, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
+        perror("connect"); close(s); return 1;
+    }
+
+    char buf[1024];
+    printf("Enter a message: ");
+    if (fgets(buf, sizeof(buf), stdin)) {
+        send(s, buf, strlen(buf), 0);
+        ssize_t n = recv(s, buf, sizeof(buf) - 1, 0);
+        if (n > 0) { buf[n] = '\0'; printf("Echo from server: %s", buf); }
+    }
+    close(s);
+    return 0;
+}
+
+PROCEDURE
+1. Save the two programs as server.c and client.c.
+2. Compile: gcc server.c -o server and gcc client.c -o client
+3. Terminal 1: ./server
+4. Terminal 2: ./client
+5. Enter a message and observe the echoed response. Run both programs on the same machine for this example.
+
+OUTPUT (illustrative)
+Server: Echo server listening on port 5000...
+Client: Enter a message: Hello
+Client: Echo from server: Hello

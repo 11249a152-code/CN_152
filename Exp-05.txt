@@ -1,0 +1,87 @@
+EXPERIMENT 5: Chat Application Using TCP Sockets
+
+AIM
+To develop a simple two-way chat application between a TCP client and server using C socket programming.
+
+PROGRAM (Server - save as chat_server.c)
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+
+int main(void) {
+    int s = socket(AF_INET, SOCK_STREAM, 0);
+    struct sockaddr_in a = {0};
+    a.sin_family = AF_INET; a.sin_port = htons(5001);
+    a.sin_addr.s_addr = INADDR_ANY;
+    int opt = 1;
+    setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+    if (bind(s, (struct sockaddr *)&a, sizeof(a)) < 0 || listen(s, 1) < 0) {
+        perror("server setup"); return 1;
+    }
+    puts("Chat server waiting on port 5001...");
+    int c = accept(s, NULL, NULL);
+    if (c < 0) { perror("accept"); return 1; }
+
+    char buf[1024];
+    while (1) {
+        ssize_t n = recv(c, buf, sizeof(buf) - 1, 0);
+        if (n <= 0) break;
+        buf[n] = '\0';
+        printf("\nClient: %s", buf);
+        if (strncmp(buf, "exit", 4) == 0) break;
+
+        printf("You: ");
+        if (!fgets(buf, sizeof(buf), stdin)) break;
+        send(c, buf, strlen(buf), 0);
+        if (strncmp(buf, "exit", 4) == 0) break;
+    }
+    close(c); close(s);
+    return 0;
+}
+
+PROGRAM (Client - save as chat_client.c)
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+
+int main(void) {
+    int s = socket(AF_INET, SOCK_STREAM, 0);
+    struct sockaddr_in a = {0};
+    a.sin_family = AF_INET; a.sin_port = htons(5001);
+    inet_pton(AF_INET, "127.0.0.1", &a.sin_addr);
+    if (connect(s, (struct sockaddr *)&a, sizeof(a)) < 0) {
+        perror("connect"); return 1;
+    }
+
+    char buf[1024];
+    while (1) {
+        printf("You: ");
+        if (!fgets(buf, sizeof(buf), stdin)) break;
+        send(s, buf, strlen(buf), 0);
+        if (strncmp(buf, "exit", 4) == 0) break;
+
+        ssize_t n = recv(s, buf, sizeof(buf) - 1, 0);
+        if (n <= 0) break;
+        buf[n] = '\0';
+        printf("Server: %s", buf);
+        if (strncmp(buf, "exit", 4) == 0) break;
+    }
+    close(s);
+    return 0;
+}
+
+PROCEDURE
+1. Save as chat_server.c and chat_client.c.
+2. Compile both using gcc.
+3. Run ./chat_server in one terminal and ./chat_client in another.
+4. Exchange messages. Type exit to end the chat.
+5. This basic classroom example handles one client and alternates turns.
+
+OUTPUT (illustrative)
+Server: Chat server waiting on port 5001...
+Client: You: Hello
+Server: You: Hi, how are you?
+Client: You: I am fine.
+Type exit to terminate the session.

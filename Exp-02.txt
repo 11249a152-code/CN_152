@@ -1,0 +1,64 @@
+EXPERIMENT 2: Commands, PDU Capture, Distance Vector Routing in NS2
+
+AIM
+To simulate a network using Distance Vector routing in NS2 and observe packet transmission and routing behaviour.
+
+PROGRAM (Tcl - save as exp2.tcl)
+set ns [new Simulator]
+set tr [open exp2.tr w]
+set nf [open exp2.nam w]
+$ns trace-all $tr
+$ns namtrace-all $nf
+
+# Enable Distance Vector routing
+$ns rtproto DV
+
+set n0 [$ns node]
+set n1 [$ns node]
+set n2 [$ns node]
+set n3 [$ns node]
+set n4 [$ns node]
+
+$ns duplex-link $n0 $n1 1Mb 10ms DropTail
+$ns duplex-link $n1 $n2 1Mb 10ms DropTail
+$ns duplex-link $n2 $n3 1Mb 10ms DropTail
+$ns duplex-link $n1 $n4 1Mb 15ms DropTail
+$ns duplex-link $n4 $n3 1Mb 15ms DropTail
+
+# UDP traffic
+set udp [new Agent/UDP]
+$ns attach-agent $n0 $udp
+set sink [new Agent/Null]
+$ns attach-agent $n3 $sink
+$ns connect $udp $sink
+
+set app [new Application/Traffic/CBR]
+$app set packetSize_ 512
+$app set interval_ 0.1
+$app attach-agent $udp
+
+$ns at 1.0 "$app start"
+$ns at 8.0 "$app stop"
+
+proc finish {} {
+    global ns tr nf
+    $ns flush-trace
+    close $tr
+    close $nf
+    exec nam exp2.nam &
+    exit 0
+}
+$ns at 9.0 "finish"
+$ns run
+
+PROCEDURE
+1. Save as exp2.tcl.
+2. Run: ns exp2.tcl
+3. View the topology in NAM and inspect exp2.tr.
+4. Observe that Distance Vector routing calculates routes using information exchanged by neighbouring routers.
+
+OUTPUT (illustrative)
+Distance Vector routing simulation executed.
+Trace file: exp2.tr
+Animation file: exp2.nam
+Packets were sent from node 0 to node 3 through the available network path.

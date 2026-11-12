@@ -1,0 +1,72 @@
+EXPERIMENT 11: Cyclic Redundancy Check (CRC)
+
+AIM
+To implement the Cyclic Redundancy Check (CRC) error-detection technique using a C program.
+
+PROGRAM (C - save as exp11.c)
+#include <stdio.h>
+#include <string.h>
+
+int main(void) {
+    char data[256], divisor[64], work[320], codeword[320];
+    int n, m;
+
+    printf("Enter data bits: ");
+    if (scanf("%255s", data) != 1) return 1;
+    printf("Enter generator bits: ");
+    if (scanf("%63s", divisor) != 1) return 1;
+
+    n = (int)strlen(data);
+    m = (int)strlen(divisor);
+    if (n == 0 || m < 2 || m > 63) {
+        puts("Invalid input length."); return 1;
+    }
+    for (int i = 0; i < n; i++)
+        if (data[i] != '0' && data[i] != '1') { puts("Use binary data."); return 1; }
+    for (int i = 0; i < m; i++)
+        if (divisor[i] != '0' && divisor[i] != '1') { puts("Use binary generator."); return 1; }
+
+    strcpy(work, data);
+    for (int i = 0; i < m - 1; i++) work[n + i] = '0';
+    work[n + m - 1] = '\0';
+
+    for (int i = 0; i < n; i++) {
+        if (work[i] == '1') {
+            for (int j = 0; j < m; j++)
+                work[i + j] = (work[i + j] == divisor[j]) ? '0' : '1';
+        }
+    }
+
+    strcpy(codeword, data);
+    strncat(codeword, work + n, m - 1);
+    printf("CRC remainder: %.*s\n", m - 1, work + n);
+    printf("Transmitted codeword: %s\n", codeword);
+
+    /* Receiver-side check */
+    strcpy(work, codeword);
+    for (int i = 0; i < n; i++) {
+        if (work[i] == '1') {
+            for (int j = 0; j < m; j++)
+                work[i + j] = (work[i + j] == divisor[j]) ? '0' : '1';
+        }
+    }
+    int error = 0;
+    for (int i = 0; i < n + m - 1; i++)
+        if (work[i] == '1') error = 1;
+    puts(error ? "Receiver: Error detected." : "Receiver: No error detected.");
+    return 0;
+}
+
+PROCEDURE
+1. Save as exp11.c.
+2. Compile: gcc exp11.c -o exp11
+3. Run: ./exp11
+4. Enter a binary dataword and a binary generator polynomial.
+5. The program appends generator-degree zeros, performs modulo-2 division, and displays the remainder and codeword.
+
+OUTPUT (illustrative)
+Enter data bits: 1101
+Enter generator bits: 1011
+CRC remainder: 001
+Transmitted codeword: 1101001
+Receiver: No error detected.

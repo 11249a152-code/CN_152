@@ -1,0 +1,67 @@
+EXPERIMENT 8: Congestion Control in NS2
+
+AIM
+To simulate TCP congestion control in NS2 and observe packet drops and congestion-window behaviour when a network link becomes a bottleneck.
+
+PROGRAM (Tcl - save as exp8.tcl)
+set ns [new Simulator]
+set tr [open exp8.tr w]
+set nf [open exp8.nam w]
+set cw [open exp8.cwnd w]
+$ns trace-all $tr
+$ns namtrace-all $nf
+
+set n0 [$ns node]
+set n1 [$ns node]
+set n2 [$ns node]
+set n3 [$ns node]
+
+$ns duplex-link $n0 $n2 2Mb 10ms DropTail
+$ns duplex-link $n1 $n2 2Mb 10ms DropTail
+$ns duplex-link $n2 $n3 500Kb 50ms DropTail
+$ns queue-limit $n2 $n3 10
+
+set tcp [new Agent/TCP/Reno]
+$tcp set packetSize_ 1000
+$ns attach-agent $n0 $tcp
+set sink [new Agent/TCPSink]
+$ns attach-agent $n3 $sink
+$ns connect $tcp $sink
+
+set ftp [new Application/FTP]
+$ftp attach-agent $tcp
+
+proc record {} {
+    global ns tcp cw
+    set t [$ns now]
+    set w [$tcp set cwnd_]
+    puts $cw "$t $w"
+    $ns at [expr $t + 0.1] "record"
+}
+$ns at 0.1 "record"
+$ns at 0.5 "$ftp start"
+$ns at 9.0 "$ftp stop"
+
+proc finish {} {
+    global ns tr nf cw
+    $ns flush-trace
+    close $tr
+    close $nf
+    close $cw
+    exec nam exp8.nam &
+    exit 0
+}
+$ns at 9.5 "finish"
+$ns run
+
+PROCEDURE
+1. Save as exp8.tcl and run: ns exp8.tcl
+2. Open exp8.nam to observe traffic and the bottleneck link.
+3. Inspect exp8.tr for packet drops and exp8.cwnd for congestion-window samples.
+4. Plot exp8.cwnd with a plotting tool to observe changes over time.
+
+OUTPUT (illustrative)
+TCP Reno traffic was transmitted over the bottleneck link.
+Trace file exp8.tr and congestion-window data exp8.cwnd were generated.
+The congestion window changes as acknowledgements arrive and congestion is detected.
+Packet drops may occur depending on the queue and simulation settings.
